@@ -45,10 +45,10 @@ app.post('/signup', async (req, res) => {
 
 // login route post
 app.post('/login', async (req, res) => {
-  const { email, password } = req.body;
+  const { username, password } = req.body;
 
   try {
-    const user = await pool.query('SELECT * FROM users WHERE email = $1', [email]);
+    const user = await pool.query('SELECT * FROM users WHERE username = $1', [username]);
     if (user.rows.length === 0) {
       return res.status(400).json({ error: 'User not found' });
     }
