@@ -9,7 +9,7 @@ app.use(cors());
 app.use(express.json());
 
 // Register routes
-app.use('/api', authRoutes);
-app.use('/api', workoutRoutes);
+app.use('/', authRoutes);
+app.use('/', workoutRoutes);
 
 module.exports = app;
