@@ -4,16 +4,33 @@ const jwt = require('jsonwebtoken');
 const pool = require('../db');
 const router = express.Router();
 
+const generateToken = (userId) => {
+  return jwt.sign({ userId }, 'your_jwt_secret', { expiresIn: '1h' });
+};
+
 // Signup route
 router.post('/signup', async (req, res) => {
   try {
     const { username, phoneNumber, email, password, birthdate } = req.body;
     const hashedPassword = await bcrypt.hash(password, 10);
+    
     const result = await pool.query(
       'INSERT INTO users (username, phone_number, email, password, birthdate) VALUES ($1, $2, $3, $4, $5) RETURNING *',
       [username, phoneNumber, email, hashedPassword, birthdate]
     );
-    res.status(201).json({ message: 'User created!', user: result.rows[0] });
+    
+    const user = result.rows[0];
+    const token = generateToken(user.id);
+    
+    res.status(201).json({ 
+      message: 'User created!', 
+      token,
+      user: {
+        id: user.id,
+        username: user.username,
+        email: user.email,
+      }
+    });
   } catch (err) {
     res.status(400).json({ error: err.message });
   }
@@ -30,7 +47,7 @@ router.post('/login', async (req, res) => {
     const isMatch = await bcrypt.compare(password, user.rows[0].password);
     if (!isMatch) return res.status(400).json({ error: 'Invalid credentials' });
 
-    const token = jwt.sign({ userId: user.rows[0].id }, 'your_jwt_secret', { expiresIn: '1h' });
+    const token = generateToken(user.rows[0].id);
 
     res.json({
       message: 'Login successful',
@@ -46,4 +63,4 @@ router.post('/login', async (req, res) => {
   }
 });
 
-module.exports = authRoutes;
+module.exports = router;
